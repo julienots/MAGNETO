@@ -5,7 +5,7 @@ interface FT { el: HTMLDivElement; x: number; y: number; z: number; t: number; d
 export class FloatText {
   private pool: FT[] = [];
   private o = { x: 0, y: 0, visible: true };
-  constructor(private layer: HTMLElement, n = 40) {
+  constructor(layer: HTMLElement, n = 40) {
     for (let i = 0; i < n; i++) {
       const el = document.createElement('div'); el.className = 'ft'; el.style.display = 'none'; layer.appendChild(el);
       this.pool.push({ el, x: 0, y: 0, z: 0, t: 0, dur: 1, active: false, vy: 0, scale: 1 });

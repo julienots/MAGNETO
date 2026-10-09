@@ -90,7 +90,8 @@ class AudioEngine {
   private t() { return this.ctx!.currentTime; }
 
   private tone(freq: number, dur: number, type: OscillatorType, vol: number, opts: { to?: number; attack?: number; dest?: AudioNode; delay?: number; filter?: number } = {}) {
-    const ctx = this.ctx!; const t0 = this.t() + (opts.delay ?? 0);
+    if (!this.ctx || this.ctx.state !== 'running') return;
+    const ctx = this.ctx; const t0 = this.t() + (opts.delay ?? 0);
     const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t0);
     if (opts.to) o.frequency.exponentialRampToValueAtTime(Math.max(20, opts.to), t0 + dur);
     const g = ctx.createGain();
@@ -103,7 +104,8 @@ class AudioEngine {
     o.start(t0); o.stop(t0 + dur + 0.02);
   }
   private noise(dur: number, vol: number, opts: { type?: BiquadFilterType; freq?: number; to?: number; q?: number; delay?: number; dest?: AudioNode; attack?: number } = {}) {
-    const ctx = this.ctx!; const t0 = this.t() + (opts.delay ?? 0);
+    if (!this.ctx || this.ctx.state !== 'running') return;
+    const ctx = this.ctx; const t0 = this.t() + (opts.delay ?? 0);
     const s = ctx.createBufferSource(); s.buffer = this.noiseBuf;
     s.playbackRate.value = vary(1, 0.15);
     const f = ctx.createBiquadFilter(); f.type = opts.type ?? 'lowpass'; f.frequency.setValueAtTime(opts.freq ?? 2000, t0); f.Q.value = opts.q ?? 0.8;

@@ -21,7 +21,7 @@ export class Input {
   private base: HTMLDivElement; private knob: HTMLDivElement;
   private off: (() => void)[] = [];
 
-  constructor(private el: HTMLElement, overlay: HTMLElement) {
+  constructor(el: HTMLElement, overlay: HTMLElement) {
     this.base = document.createElement('div'); this.base.className = 'joy-base';
     this.knob = document.createElement('div'); this.knob.className = 'joy-knob';
     this.base.appendChild(this.knob); overlay.appendChild(this.base);

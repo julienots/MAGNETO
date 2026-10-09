@@ -412,14 +412,14 @@ export class HeroRig {
       const p = (e as any).pupil as THREE.Group;
       p.position.x = this.lookX * 0.06; p.position.y = this.lookY * 0.05;
     }
-    const browRot = expr === 'angry' || expr === 'focus' ? 0.35 : expr === 'sad' ? -0.3 : expr === 'surprised' ? -0.1 : 0;
+    const browRot = expr === 'angry' || expr === 'focus' ? 0.35 : (expr as Expression) === 'sad' ? -0.3 : expr === 'surprised' ? -0.1 : 0;
     const browY = expr === 'surprised' ? 0.05 : 0;
     this.brows.forEach((b, i) => { b.rotation.z = damp(b.rotation.z, (i === 0 ? -1 : 1) * browRot, 18, dt); b.userData.by ??= b.position.y; b.position.y = b.userData.by + browY; });
     const open = expr === 'surprised' || expr === 'angry' || this.push > 0.3 || (this.anim === 'victory');
     this.mouthOpen.visible = open;
     this.mouthSmile.visible = !open && expr !== 'ko';
     if (this.mouthOpen.visible) this.mouthOpen.scale.y = 0.06 + (expr === 'surprised' ? 0.06 : 0.03) + Math.abs(Math.sin(t * 8)) * 0.02;
-    this.mouthSmile.rotation.z = expr === 'sad' ? 0 : Math.PI;
+    this.mouthSmile.rotation.z = (expr as Expression) === 'sad' ? 0 : Math.PI;
 
     // hurt flash
     this.setFlash(this.hurtT > 0 ? (Math.sin(this.hurtT * 60) > 0 ? 0.6 : 0) : 0);

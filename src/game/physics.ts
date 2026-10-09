@@ -158,9 +158,19 @@ export class PhysicsWorld {
     this.onCollide?.(a, b, -vn, nx, nz);
   }
 
+  /** Safety bounds: nothing may ever leave the arena, whatever forces act on it. */
+  bounds: { x0: number; z0: number; x1: number; z1: number } | null = null;
+
   private collideWalls() {
+    const bd = this.bounds;
     for (const b of this.bodies) {
-      if (b.isStatic || b.ghost) continue;
+      if (b.isStatic) continue;
+      if (bd) {
+        if (b.x < bd.x0 + b.r) { b.x = bd.x0 + b.r; if (b.vx < 0) b.vx = -b.vx * 0.3; }
+        if (b.x > bd.x1 - b.r) { b.x = bd.x1 - b.r; if (b.vx > 0) b.vx = -b.vx * 0.3; }
+        if (b.z < bd.z0 + b.r) { b.z = bd.z0 + b.r; if (b.vz < 0) b.vz = -b.vz * 0.3; }
+        if (b.z > bd.z1 - b.r) { b.z = bd.z1 - b.r; if (b.vz > 0) b.vz = -b.vz * 0.3; }
+      }
       for (const w of this.walls) {
         const cx = Math.max(w.x0, Math.min(b.x, w.x1));
         const cz = Math.max(w.z0, Math.min(b.z, w.z1));

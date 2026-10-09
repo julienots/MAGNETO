@@ -113,9 +113,9 @@ export function buildHazards(b: Battle, mechs: Mechanic[]): Hazard[] {
           const stripe = new THREE.Mesh(rboxGeo(2.24, 0.2, 2.24, 0.05), toon(0xffc23d)); stripe.position.y = -0.3; head.add(stripe);
           const warn = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ color: 0xff2d2d, transparent: true, opacity: 0, depthWrite: false }));
           warn.rotation.x = -Math.PI / 2; warn.position.y = 0.22; g.add(warn);
-          return { x, z, g, head, warn, t: rng.range(0, 3), rect: { x0: x - 1.1, z0: z - 1.1, x1: x + 1.1, z1: z + 1.1 } };
+          return { x, z, g, head, warn, t: rng.range(0, 3), rect: { x0: x - 1.25, z0: z - 1.25, x1: x + 1.25, z1: z + 1.25 } };
         });
-        const CYCLE = 3.4;
+const CYCLE = 2.8;
         out.push({
           type: m,
           update(dt) {
@@ -123,15 +123,21 @@ export function buildHazards(b: Battle, mechs: Mechanic[]): Hazard[] {
               p.t = (p.t + dt) % CYCLE;
               const t = p.t;
               let y: number;
-              if (t < 1.6) y = 3.2; // up
-              else if (t < 2.5) { y = 3.2 + Math.sin(t * 40) * 0.05; } // warn
-              else if (t < 2.6) y = 3.2 * (1 - (t - 2.5) / 0.1); // slam
-              else if (t < 2.9) y = 0.45; // hold
-              else y = 0.45 + ((t - 2.9) / 0.5) * 2.75;
+              if (t < 1.1) y = 3.2; // up
+              else if (t < 1.8) { y = 3.2 + Math.sin(t * 40) * 0.05; } // warn
+              else if (t < 1.9) y = 3.2 * (1 - (t - 1.8) / 0.1); // slam
+              else if (t < 2.2) y = 0.45; // hold
+              else y = 0.45 + ((t - 2.2) / 0.6) * 2.75;
               p.head.position.y = Math.max(0.45, y);
-              (p.warn.material as THREE.MeshBasicMaterial).opacity = t >= 1.6 && t < 2.6 ? 0.25 + Math.sin(t * 25) * 0.2 : 0;
+              (p.warn.material as THREE.MeshBasicMaterial).opacity = t >= 1.1 && t < 1.9 ? 0.25 + Math.sin(t * 25) * 0.2 : 0;
+              // thrown enemies landing on the press plate get stuck (magnetic plate) until the slam
+              for (const body of b.phys.bodies) {
+                if (body.kind !== 'enemy' || body.thrown <= 0 || !inRect(body.x, body.z, p.rect, 0)) continue;
+                const e = body.owner as Enemy;
+                if (e.stun < 1.2) { e.stun = 1.6; body.vx *= 0.2; body.vz *= 0.2; b.fx.burst(body.x, 0.4, body.z, 0xffc23d, 6, 3, 0.3, 0.3); }
+              }
               const prev = t - dt;
-              if (prev < 2.6 && t >= 2.6) {
+              if (prev < 1.9 && t >= 1.9) {
                 // SLAM
                 b.fx.ring(p.x, p.z, 0xffffff, 1, 3.4, 0.35, 0.8);
                 b.fx.smoke(p.x, 0.3, p.z, 8, 0x8a8a8a, 1.2);
@@ -146,7 +152,7 @@ export function buildHazards(b: Battle, mechs: Mechanic[]): Hazard[] {
               }
             }
           },
-          isDanger(x, z, r) { return presses.some((p) => inRect(x, z, p.rect, r) && p.t > 1.4 && p.t < 3.0); },
+          isDanger(x, z, r) { return presses.some((p) => inRect(x, z, p.rect, r) && p.t > 1.0 && p.t < 2.3); },
           dispose() { presses.forEach((p) => p.g.removeFromParent()); },
         });
         break;
@@ -307,7 +313,7 @@ export function buildHazards(b: Battle, mechs: Mechanic[]): Hazard[] {
             lavaMat.uniforms.uT.value += dt;
             for (const p of pools) {
               if (Math.random() < 0.15 * b.fx.quality) b.fx.glow.spawn(p.x + (Math.random() - 0.5) * 2.6, 0.1, p.z + (Math.random() - 0.5) * 2.2, 0, 2.5, 0, new THREE.Color(0xff9a3a), 0.9, 0.3, 0.8, 0, 1);
-              forBodies(b, (body) => { if (body.y < 0.3 && inRect(body.x, body.z, p.rect, -body.r * 0.4)) swallow(b, body, 'lava'); });
+              forBodies(b, (body) => { if (body.y < 0.8 && inRect(body.x, body.z, p.rect, -body.r * 0.4)) swallow(b, body, 'lava'); });
             }
           },
           isDanger(x, z, r) { return pools.some((p) => inRect(x, z, p.rect, r)); },
@@ -328,7 +334,7 @@ export function buildHazards(b: Battle, mechs: Mechanic[]): Hazard[] {
           update(dt) {
             for (const p of pits) {
               p.glow.rotation.z += dt;
-              forBodies(b, (body) => { if (body.y < 0.25 && Math.hypot(body.x - p.x, body.z - p.z) < p.r - body.r * 0.35) swallow(b, body, 'pit'); });
+              forBodies(b, (body) => { if (body.y < 1.3 && Math.hypot(body.x - p.x, body.z - p.z) < p.r - body.r * 0.35) swallow(b, body, 'pit'); });
             }
           },
           isDanger(x, z, r) { return pits.some((p) => Math.hypot(x - p.x, z - p.z) < p.r + r); },
@@ -423,9 +429,10 @@ export function buildHazards(b: Battle, mechs: Mechanic[]): Hazard[] {
             forBodies(b, (body) => {
               const dx = x - body.x, dz = z - body.z, d = Math.hypot(dx, dz);
               if (d > 4.5 || d < 0.01) return;
-              const pull = (body.kind === 'player' ? 5 : 16) * (1 - d / 4.5) / Math.sqrt(body.mass) * (body.kind === 'player' && b.effectivePolarity() < 0 ? 0.4 : 1);
+              const pull = (body.kind === 'player' ? 5 : body.kind === 'enemy' ? 26 : 16) * (1 - d / 4.5) / Math.sqrt(body.mass) * (body.kind === 'player' && b.effectivePolarity() < 0 ? 0.4 : 1);
               body.vx += (dx / d) * pull * dt; body.vz += (dz / d) * pull * dt;
-              if (d < 0.75 && body.y < 0.3) swallow(b, body, 'well');
+              if (body.kind === 'enemy' && d < 2.2) { const e = body.owner as Enemy; e.stun = Math.max(e.stun, 0.15); }
+              if ((d < 1.0 && body.y < 1.2) || (body.kind === 'enemy' && body.thrown > 0 && d < 1.7 && body.y < 1.6)) swallow(b, body, 'well');
             });
             if (Math.random() < 0.4 * b.fx.quality) { const a = Math.random() * TAU; b.fx.stream(x + Math.cos(a) * 4, 0.2, z + Math.sin(a) * 4, x, z, 0xd8a0ff, 6, 0.2); }
           },

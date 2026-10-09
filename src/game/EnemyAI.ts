@@ -67,7 +67,7 @@ export function updateEnemyAI(b: Battle, e: Enemy, dt: number) {
   if (!playerDead && dist < reach && e.meleeCd <= 0 && e.kind !== 'bomber' && !e.phase) {
     e.meleeCd = 1.0;
     e.rig.kick(1);
-    if (core) b.damageTarget(b.protectCore!, e.def.damage, 0);
+    if (core) b.damageTarget(b.protectCore!, e.def.damage * 0.6, 0);
     else b.hurtPlayer(e.def.damage * (e.elite ? 1.5 : 1), dx / dist, dz / dist, 7);
   }
   if (playerDead) { steer(b, e, 0, 0, 0, dt); return; }

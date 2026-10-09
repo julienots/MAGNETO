@@ -130,6 +130,7 @@ export class Battle {
     this.phys.addWall(-HW - 5, HH, HW + 5, HH + 5, 'wall');
     this.phys.addWall(-HW - 5, -HH, -HW, HH, 'wall');
     this.phys.addWall(HW, -HH, HW + 5, HH, 'wall');
+    this.phys.bounds = { x0: -HW - 0.05, z0: -HH - 0.05, x1: HW + 0.05, z1: HH + 0.05 };
     this.phys.onCollide = (a, b, imp, nx, nz, w) => this.collide(a, b, imp, nx, nz, w);
 
     this.combo.onTier = (t, i) => this.comboTier(t, i);
@@ -211,7 +212,7 @@ export class Battle {
           this.spawnTarget('generator', x, z, 180 * DIFF_HP(this.difficulty));
         }
       }
-      if (o === 'protect') this.protectCore = this.spawnTarget('protect', 0, 3.2, 400 * DIFF_HP(this.difficulty));
+      if (o === 'protect') this.protectCore = this.spawnTarget('protect', 0, 3.2, 650 * DIFF_HP(this.difficulty));
       if (o === 'collect') {
         const mesh = makePropMesh('collector', 0.04); mesh.position.set(0, 0, -8);
         this.scene.add(mesh);
@@ -294,7 +295,7 @@ export class Battle {
     const body = new Body();
     const scale = elite ? 1.6 : 1;
     body.kind = 'enemy'; body.r = def.radius * scale; body.setMass(def.mass * (elite ? 3 : 1)); body.drag = 5; body.restitution = 0.35;
-    body.magnetic = 1; body.resist = elite ? Math.min(0.85, def.resist + 0.4) : def.resist; body.x = x; body.z = z;
+    body.magnetic = 1; body.resist = elite ? Math.min(0.75, def.resist + 0.3) : def.resist; body.x = x; body.z = z;
     let charge: 0 | 1 | -1 = def.charge;
     if (this.cfg.event?.randomPolarity || this.chaosRule === 'polarity') charge = this.rng.chance(0.5) ? 1 : -1;
     body.charge = kind === 'puller' || kind === 'pusher' ? 0 : charge;
@@ -303,7 +304,7 @@ export class Battle {
     rig.root.scale.setScalar(scale);
     if (this.cfg.quality <= 0.6) rig.body.children.forEach((c) => (c.visible = false));
     this.scene.add(rig.root);
-    const hpMul = DIFF_HP(this.difficulty) * (elite ? 4 : 1) * (this.cfg.mode === 'survival' ? 1 + this.wave * 0.06 : 1);
+    const hpMul = DIFF_HP(this.difficulty) * (elite ? 2.2 : 1) * (this.cfg.mode === 'survival' ? 1 + this.wave * 0.06 : 1);
     const e: Enemy = {
       body, rig, def, kind, hp: def.hp * hpMul, maxHp: def.hp * hpMul, t: this.rng.range(0, 3), cd: this.rng.range(1, 2.5), state: 'spawn', stateT: 0,
       stun: 0, facing: 0, charge: kind === 'chaos' ? 1 : def.charge, phase: false, fuse: 0, burn: 0, dead: false, dying: 0, falling: 0, elite, scale,
@@ -494,7 +495,7 @@ export class Battle {
         const ca = Math.cos(spread), sa = Math.sin(spread);
         const dx = ax * ca - az * sa, dz = ax * sa + az * ca;
         const sp = (27 * p.stats.force) / (0.6 + 0.4 * Math.sqrt(b.mass));
-        b.vx = dx * sp; b.vz = dz * sp; b.vy = 2.5; b.y = Math.max(b.y, 0.6);
+        b.vx = dx * sp; b.vz = dz * sp; b.vy = 0.8; b.y = Math.max(b.y, 0.6);
         b.thrown = 1.3; b.chain = chain;
         if (b.kind === 'prop') (b.owner as Prop).spin = 18;
       });
@@ -580,7 +581,7 @@ export class Battle {
       // shield: frontal deflect
       if (e.kind === 'shield' && e.state !== 'spawn') {
         const fx = Math.sin(e.facing), fz = Math.cos(e.facing);
-        if (-(nx * fx + nz * fz) > 0.35) {
+        if (-(nx * fx + nz * fz) > 0.6) {
           audio.shield(); this.fx.burst(target.x - nx * target.r, 0.9, target.z - nz * target.r, 0x30e0ff, 10, 6, 0.4, 0.3);
           this.ft.spawn(target.x, 2.2, target.z, 'BLOQUÉ', 'ft-block', 0.6);
           e.rig.kick(0.4);
@@ -643,8 +644,17 @@ export class Battle {
     audio.impact(0.8, p.spec.material);
     if (chain) { this.combo.add(1); this.addScore(25, b.x, b.z); }
     this.removeProp(p, false);
-    // respawn more ammo so arenas never run dry
-    if (this.props.filter((x) => !x.dead && x.kind !== 'cell' && x.kind !== 'core').length < 6) this.later(1.5, () => this.dropProp());
+  }
+
+  private ammoT = 0;
+  /** The arena must never run dry: magnetism needs objects. Missing ammo drops from the sky. */
+  private keepAmmo(dt: number) {
+    this.ammoT -= dt;
+    if (this.ammoT > 0) return;
+    this.ammoT = 0.7;
+    const ammo = this.props.filter((x) => !x.dead && x.falling <= 0 && x.kind !== 'cell' && x.kind !== 'core').length;
+    const min = this.boss ? 9 : 7;
+    if (ammo < min) this.dropProp();
   }
 
   /** Props falling from the sky (keeps the arena stocked). */
@@ -737,6 +747,9 @@ export class Battle {
     if (this.rng.chance(e.elite ? 1 : 0.05) && this.player.hp < this.player.maxHp) this.later(0.2, () => this.heartPickup(b.x, b.z));
   }
 
+  coinRain(x: number, z: number, n: number) {
+    for (let i = 0; i < n; i++) this.later(i * 0.04, () => this.coinPickup(x + (Math.random() - 0.5) * 4, z + (Math.random() - 0.5) * 3));
+  }
   private coinPickup(x: number, z: number) {
     this.stats.coins += 1;
     this.fx.burst(x, 1, z, 0xffd23f, 3, 4, 0.35, 0.4);
@@ -914,6 +927,7 @@ export class Battle {
     if (due.length) { this.delayed = this.delayed.filter((d) => d.t > 0); due.forEach((d) => d.fn()); }
 
     this.updatePlayer(dt);
+    if (this.state === 'play') this.keepAmmo(dt);
     if (this.state === 'play' && !this.player.dead) this.applyMagnet(dt);
     for (const h of this.hazards) h.update(dt);
     this.phys.step(dt);
@@ -1016,8 +1030,7 @@ export class Battle {
         if (p.falling <= 0) {
           this.removeProp(p);
           if (p.kind === 'cell') this.later(1, () => this.spawnProp('cell'));
-          else if (p.kind !== 'core') this.later(2, () => this.dropProp());
-          else this.later(0.5, () => { const c = this.spawnProp('core', 0, 2); c.body.y = 8; });
+          else if (p.kind === 'core') this.later(0.5, () => { const c = this.spawnProp('core', 0, 2); c.body.y = 8; });
         }
         continue;
       }
@@ -1123,10 +1136,10 @@ export class Battle {
       if (o.type === 'survival') o.progress = this.wave;
     }
     switch (o.type) {
-      case 'eliminate': if (L && this.wave >= L.waves.length && alive === 0) this.end(true); break;
+      case 'eliminate': if (L && this.wave >= L.waves.length && this.aliveEnemies() === 0) this.end(true); break;
       case 'survive': case 'protect': if (this.timeLimit && this.time >= this.timeLimit) this.end(true); break;
       case 'combo': o.progress = Math.max(o.progress, this.combo.count); if (o.progress >= o.target) this.end(true); break;
-      case 'ringout': case 'collect': case 'destroy': if (o.progress >= o.target) this.end(true); break;
+      case 'ringout': case 'collect': case 'destroy': o.progress = Math.min(o.progress, o.target); if (o.progress >= o.target) this.end(true); break;
       case 'rush': case 'chaos': if (this.timeLimit && this.time >= this.timeLimit) this.end(true); break;
       default: break;
     }
