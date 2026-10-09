@@ -2,6 +2,24 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
+/** Mark a cached resource as shared so per-scene disposal never frees it. */
+export function shared<T extends { userData: any }>(o: T): T { o.userData.shared = true; return o; }
+
+/** Free every non-shared geometry/material/texture under a node (scene teardown). */
+export function disposeTree(root: THREE.Object3D) {
+  root.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.geometry && !m.geometry.userData.shared) m.geometry.dispose();
+    const mats = m.material ? (Array.isArray(m.material) ? m.material : [m.material]) : [];
+    for (const mat of mats) {
+      if (mat.userData.shared) continue;
+      const map = (mat as THREE.MeshBasicMaterial).map;
+      if (map && !map.userData.shared) map.dispose();
+      mat.dispose();
+    }
+  });
+}
+
 /* ---------- toon ramp ---------- */
 let ramp: THREE.DataTexture | null = null;
 export function toonRamp() {
@@ -11,6 +29,7 @@ export function toonRamp() {
   ramp.minFilter = ramp.magFilter = THREE.NearestFilter;
   ramp.generateMipmaps = false;
   ramp.needsUpdate = true;
+  ramp.userData.shared = true;
   return ramp;
 }
 
@@ -25,7 +44,7 @@ export function toon(color: number, opts: { emissive?: number; emissiveIntensity
       transparent: !!opts.transparent, opacity: opts.opacity ?? 1,
       vertexColors: !!opts.vertexColors,
     });
-    matCache.set(key, m);
+    matCache.set(key, shared(m));
   }
   return m;
 }
@@ -42,7 +61,7 @@ export function basic(color: number, opts: { transparent?: boolean; opacity?: nu
       blending: opts.additive ? THREE.AdditiveBlending : THREE.NormalBlending, side: opts.side ?? THREE.FrontSide,
       depthWrite: opts.depthWrite ?? !opts.additive,
     });
-    matCache.set(key, m);
+    matCache.set(key, shared(m));
   }
   return m;
 }
@@ -66,7 +85,7 @@ export function outlineMat(thickness = 0.04, color = 0x14121c) {
       fragmentShader: `uniform vec3 color; void main(){ gl_FragColor = vec4(color, 1.0); }`,
       side: THREE.BackSide,
     });
-    outlineMats.set(key, m);
+    outlineMats.set(key, shared(m));
   }
   return m;
 }
@@ -83,27 +102,27 @@ export function addOutline(mesh: THREE.Mesh, thickness = 0.04) {
 const geoCache = new Map<string, THREE.BufferGeometry>();
 export function sphereGeo(r = 1, w = 20, h = 14) {
   const k = `s${r}|${w}|${h}`;
-  return geoCache.get(k) ?? geoCache.set(k, new THREE.SphereGeometry(r, w, h)).get(k)!;
+  return geoCache.get(k) ?? geoCache.set(k, shared(new THREE.SphereGeometry(r, w, h))).get(k)!;
 }
 export function capsuleGeo(r: number, l: number) {
   const k = `c${r}|${l}`;
-  return geoCache.get(k) ?? geoCache.set(k, new THREE.CapsuleGeometry(r, l, 6, 14)).get(k)!;
+  return geoCache.get(k) ?? geoCache.set(k, shared(new THREE.CapsuleGeometry(r, l, 6, 14))).get(k)!;
 }
 export function rboxGeo(w: number, h: number, d: number, r = 0.08) {
   const k = `r${w}|${h}|${d}|${r}`;
-  return geoCache.get(k) ?? geoCache.set(k, new RoundedBoxGeometry(w, h, d, 3, Math.min(r, w / 2.1, h / 2.1, d / 2.1))).get(k)!;
+  return geoCache.get(k) ?? geoCache.set(k, shared(new RoundedBoxGeometry(w, h, d, 3, Math.min(r, w / 2.1, h / 2.1, d / 2.1)))).get(k)!;
 }
 export function cylGeo(rt: number, rb: number, h: number, seg = 16) {
   const k = `y${rt}|${rb}|${h}|${seg}`;
-  return geoCache.get(k) ?? geoCache.set(k, new THREE.CylinderGeometry(rt, rb, h, seg)).get(k)!;
+  return geoCache.get(k) ?? geoCache.set(k, shared(new THREE.CylinderGeometry(rt, rb, h, seg))).get(k)!;
 }
 export function torusGeo(r: number, t: number, arc = Math.PI * 2) {
   const k = `t${r}|${t}|${arc}`;
-  return geoCache.get(k) ?? geoCache.set(k, new THREE.TorusGeometry(r, t, 8, 24, arc)).get(k)!;
+  return geoCache.get(k) ?? geoCache.set(k, shared(new THREE.TorusGeometry(r, t, 8, 24, arc))).get(k)!;
 }
 export function coneGeo(r: number, h: number, seg = 12) {
   const k = `k${r}|${h}|${seg}`;
-  return geoCache.get(k) ?? geoCache.set(k, new THREE.ConeGeometry(r, h, seg)).get(k)!;
+  return geoCache.get(k) ?? geoCache.set(k, shared(new THREE.ConeGeometry(r, h, seg))).get(k)!;
 }
 
 /** Builder that bakes many colored parts into ONE vertex-colored geometry (1 draw call). */
@@ -166,7 +185,7 @@ export function blobShadow(radius: number) {
     const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
     gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(0.6, 'rgba(0,0,0,0.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
     x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
-    shadowTex = new THREE.CanvasTexture(c);
+    shadowTex = shared(new THREE.CanvasTexture(c));
   }
   const m = new THREE.Mesh(planeGeo(), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }));
   m.rotation.x = -Math.PI / 2;
@@ -176,7 +195,7 @@ export function blobShadow(radius: number) {
   return m;
 }
 let _plane: THREE.PlaneGeometry | null = null;
-export function planeGeo() { return _plane ?? (_plane = new THREE.PlaneGeometry(1, 1)); }
+export function planeGeo() { return _plane ?? (_plane = shared(new THREE.PlaneGeometry(1, 1))); }
 
 export function hex(c: number) { return '#' + c.toString(16).padStart(6, '0'); }
 export function shade(c: number, k: number) {

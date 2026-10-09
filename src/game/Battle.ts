@@ -9,7 +9,7 @@ import { buildArena, HW, HH, type ArenaVisual } from '../gfx/arena';
 import { HeroRig } from '../gfx/models/hero';
 import { EnemyRig } from '../gfx/models/enemy';
 import { makePropMesh, PROP_SPECS } from '../gfx/models/props';
-import { sphereGeo, basic } from '../gfx/toon';
+import { sphereGeo, basic, disposeTree } from '../gfx/toon';
 import { heroById, heroStatMult, type HeroDef, type HeroStats } from '../data/heroes';
 import { ENEMIES, ENEMY_KINDS, type EnemyKind } from '../data/enemies';
 import { levelById, type LevelDef, type PropKind } from '../data/levels';
@@ -342,7 +342,7 @@ export class Battle {
     const loopBonus = L ? Math.floor(i / L.waves.length) : 0;
     for (const e of list) for (let k = 0; k < e.count + (loopBonus && e.kind === 'swarm' ? 2 : 0); k++) this.queueSpawn(e.kind);
     const isLast = L && i === L.waves.length - 1;
-    if (this.cfg.event?.bossInvasion && isLast && L?.objective.type !== 'boss') this.queueSpawn(this.rng.pick(['tank', 'chaos', 'shield'] as EnemyKind[]), true);
+    if (this.cfg.event?.bossInvasion && isLast && L && L.objective.type !== 'boss' && (L.world > 1 || L.index >= 6) && i === L.waves.length - 1) this.queueSpawn(this.rng.pick(['tank', 'chaos', 'shield'] as EnemyKind[]), true);
     this.wave = i + 1;
     if (i > 0) this.onBanner?.(`VAGUE ${i + 1}`, undefined, '#ffd23f', 1.1);
     this.waveTimer = 0;
@@ -1255,6 +1255,7 @@ export class Battle {
   resize(aspect: number, h: number) { this.rig.resize(aspect); this.fx.setViewport(h); }
 
   dispose() {
+    disposeTree(this.scene);
     this.boss?.dispose();
     for (const h of this.hazards) h.dispose?.();
     this.arena.dispose();

@@ -152,7 +152,7 @@ export class MenuScene implements View {
     const targets = {
       title: { p: new THREE.Vector3(Math.sin(t * 0.15) * 1.5, 3.4, 13 * narrow), l: new THREE.Vector3(0, 3.2, -2) },
       home: { p: new THREE.Vector3(Math.sin(t * 0.2) * 0.4, 3.0, 14 * narrow), l: new THREE.Vector3(0, 2.0, 0) },
-      hero: { p: new THREE.Vector3(0, 1.9, 13.5 * narrow), l: new THREE.Vector3(0, -0.1, 0) },
+      hero: { p: new THREE.Vector3(0, 3.2, 22 * narrow), l: new THREE.Vector3(0, -1.4, 0) },
     }[this.camMode];
     const k = 1 - Math.exp(-3 * dt);
     this.camPos.lerp(targets.p, k); this.camLook.lerp(targets.l, k);

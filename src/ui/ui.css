@@ -171,7 +171,7 @@ body { font-family: 'Nunito', system-ui, sans-serif; font-weight: 900; color: #f
 .stat-row .bar { flex: 1; height: 0.6rem; background: rgba(0,0,0,0.4); border-radius: 0.3rem; overflow: hidden; }
 .stat-row .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--yellow), var(--orange)); border-radius: 0.3rem; }
 .stat-row .v { width: 2.6rem; text-align: right; }
-.hero-sheet { margin-top: auto; padding: 0.8rem; border-radius: 1.3rem 1.3rem 0 0; border-bottom: none; padding-bottom: calc(var(--sab) + 0.8rem); max-height: 52%; }
+.hero-sheet { margin-top: auto; padding: 0.8rem; border-radius: 1.3rem 1.3rem 0 0; border-bottom: none; padding-bottom: 0.8rem; max-height: 46%; }
 .skin-row { display: flex; gap: 0.45rem; overflow-x: auto; padding: 0.3rem 0.1rem 0.5rem; touch-action: pan-x; scrollbar-width: none; }
 .skin-row::-webkit-scrollbar { display: none; }
 .skin { flex: 0 0 auto; width: 4.2rem; padding: 0.3rem; border-radius: 0.8rem; border: 0.16rem solid var(--ink); text-align: center; font-size: 0.6rem; cursor: pointer; box-shadow: 0 0.2rem 0 var(--ink); }

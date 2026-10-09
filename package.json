@@ -2,7 +2,7 @@
   "name": "magnet-war",
   "private": true,
   "version": "1.0.0",
-  "description": "MAGNET WAR — a portrait magnetic action game by SUPERESSENCE",
+  "description": "MAGNET WAR \u2014 a portrait magnetic action game by SUPERESSENCE",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -10,9 +10,12 @@
     "preview": "vite preview --port 4173 --strictPort",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "qa": "node tools/qa.mjs",
+    "qa": "npm run build && node tools/sim.mjs --god",
     "assets": "node tools/gen-assets.mjs",
-    "android:sync": "npm run build && npx cap sync android"
+    "android:sync": "npm run build && npx cap sync android",
+    "qa:real": "npm run build && node tools/sim.mjs",
+    "qa:modes": "npm run build && node tools/sim.mjs --god --modes",
+    "qa:perf": "npm run build && node tools/perf.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

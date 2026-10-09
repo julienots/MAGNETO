@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { BossDef } from '../../data/bosses';
 import { toonRamp, addOutline, sphereGeo, capsuleGeo, rboxGeo, cylGeo, torusGeo, coneGeo, makeEye, blobShadow, shade, basic } from '../toon';
+import { disposeTree } from '../toon';
 import { clamp, damp } from '../../core/math';
 
 export type BossPose = 'idle' | 'raise' | 'slam' | 'vacuum' | 'shoot' | 'roar' | 'stagger' | 'dead' | 'charge';
@@ -278,5 +279,5 @@ export class BossRig {
     this.flash = Math.max(0, this.flash - dt * 5);
     for (const m of this.mats) m.emissive.setRGB(this.flash, this.flash * 0.9, this.flash * 0.9);
   }
-  dispose() { this.root.removeFromParent(); for (const m of this.mats) m.dispose(); }
+  dispose() { disposeTree(this.root); this.root.removeFromParent(); }
 }

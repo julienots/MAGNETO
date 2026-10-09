@@ -8,7 +8,7 @@ window.__simLevel = function (cfgPatch, opts) {
   scr.start(cfg);
   const b = scr.battle;
   let result = null;
-  b.onEnd = (r) => { result = r; };
+  const origEnd = b.onEnd; b.onEnd = (r) => { result = r; if (opts.keepEnd) origEnd(r); };
   b.begin();
   const inp = { moveX: 0, moveZ: 0 };
   b.input = inp;
@@ -21,7 +21,7 @@ window.__simLevel = function (cfgPatch, opts) {
   const go = (x, z) => { const p = b.player.body; const dx = x - p.x, dz = z - p.z, d = Math.hypot(dx, dz) || 1; inp.moveX = dx / d; inp.moveZ = dz / d; return d; };
   const stop = () => { inp.moveX = 0; inp.moveZ = 0; };
   try {
-    while (!result && t < maxT + 5) {
+    while (!result && !b.ended && t < maxT + 5) {
       t += dt;
       if (opts.god) { b.player.hp = b.player.maxHp; b.player.dead = false; }
       const P = b.player, p = P.body;
@@ -60,6 +60,8 @@ window.__simLevel = function (cfgPatch, opts) {
       simT += dt;
     }
   } catch (e) { err = String(e && e.stack || e); }
+  for (let k = 0; k < 90 && b.ended && !result; k++) b.update(1 / 30);
+  if (opts.keepEnd) { for (let k = 0; k < 30; k++) b.update(1 / 30); }
   const h = b.hud();
   const out = { level: cfg.levelId, mode: cfg.mode, victory: result ? result.victory : null, time: Math.round(b.time), score: b.score, stars: result ? result.stars : null, hp: Math.round(b.player.hp), wave: b.wave, obj: `${b.objective.type} ${b.objective.progress}/${b.objective.target}`, enemies: b.enemies.length, props: b.props.length, boss: h.boss ? `${h.boss.phase} ${Math.round(h.boss.hp * 100)}%` : null, kills: b.stats.kills, combo: b.combo.best, chain: b.maxChain, err, left: b.enemies.filter((e) => !e.dead).map((e) => ({ k: e.kind, s: e.state, x: +e.body.x.toFixed(1), z: +e.body.z.toFixed(1), y: +e.body.y.toFixed(2), hp: Math.round(e.hp), g: e.body.ghost, held: e.body.held, alive: e.body.alive, fall: e.falling, ph: e.phase })), pending: b.pending.length };
   return out;

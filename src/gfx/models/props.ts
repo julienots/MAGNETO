@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { PropKind } from '../../data/levels';
-import { Baker, toonRamp, outlineMat, sphereGeo, rboxGeo, cylGeo, torusGeo, coneGeo, capsuleGeo } from '../toon';
+import { Baker, shared, toonRamp, outlineMat, sphereGeo, rboxGeo, cylGeo, torusGeo, coneGeo, capsuleGeo } from '../toon';
 
 export interface PropSpec { r: number; mass: number; hp: number; material: 'wood' | 'metal' | 'ice' | 'rock' | 'robot'; restitution: number; magnetic: number; drag: number; explosive?: boolean }
 export const PROP_SPECS: Record<PropKind, PropSpec> = {
@@ -19,7 +19,7 @@ export const PROP_SPECS: Record<PropKind, PropSpec> = {
 const geos = new Map<string, THREE.BufferGeometry>();
 let sharedMat: THREE.MeshToonMaterial | null = null;
 export function propMaterial() {
-  return sharedMat ?? (sharedMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp() }));
+  return sharedMat ?? (sharedMat = shared(new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp() })));
 }
 
 function bake(kind: string): THREE.BufferGeometry {
@@ -103,7 +103,7 @@ function bake(kind: string): THREE.BufferGeometry {
 
 export function propGeo(kind: string) {
   let g = geos.get(kind);
-  if (!g) { g = bake(kind); geos.set(kind, g); }
+  if (!g) { g = shared(bake(kind)); geos.set(kind, g); }
   return g;
 }
 

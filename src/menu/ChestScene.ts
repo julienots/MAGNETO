@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { View } from '../core/Game';
 import { chestById, type ChestId } from '../data/chests';
 import { FX } from '../gfx/fx';
-import { rboxGeo, toonRamp, addOutline, torusGeo, sphereGeo, cylGeo, basic, shade } from '../gfx/toon';
+import { disposeTree, rboxGeo, toonRamp, addOutline, torusGeo, sphereGeo, cylGeo, basic, shade } from '../gfx/toon';
 import { audio } from '../audio/Audio';
 import { haptics } from '../platform/Haptics';
 import { RARITY_COLORS } from '../data/types';
@@ -132,5 +132,5 @@ export class ChestScene implements View {
     }
     this.fx.update(dt);
   }
-  dispose() { this.scene.clear(); }
+  dispose() { disposeTree(this.scene); this.scene.clear(); }
 }

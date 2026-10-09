@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import type { EnemyKind } from '../../data/enemies';
 import { ENEMIES } from '../../data/enemies';
-import { Baker, toonRamp, outlineMat, sphereGeo, capsuleGeo, rboxGeo, cylGeo, torusGeo, coneGeo, makeEye, blobShadow, shade, basic } from '../toon';
+import { Baker, shared, toonRamp, outlineMat, sphereGeo, capsuleGeo, rboxGeo, cylGeo, torusGeo, coneGeo, makeEye, blobShadow, shade, basic } from '../toon';
+import { disposeTree } from '../toon';
 
 /** Cached baked body geometry per kind: every enemy of a kind shares it. */
 const bodyGeos = new Map<EnemyKind, THREE.BufferGeometry>();
@@ -96,7 +97,7 @@ export class EnemyRig {
   constructor(public kind: EnemyKind) {
     const d = ENEMIES[kind];
     let geo = bodyGeos.get(kind);
-    if (!geo) { geo = bakeBody(kind); bodyGeos.set(kind, geo); }
+    if (!geo) { geo = shared(bakeBody(kind)); bodyGeos.set(kind, geo); }
     this.mat = new THREE.MeshToonMaterial({ color: 0xffffff, vertexColors: true, gradientMap: toonRamp() });
     if (kind === 'phaser') { this.mat.transparent = true; this.mat.opacity = 0.85; }
     this.body = new THREE.Mesh(geo, this.mat);
@@ -201,5 +202,5 @@ export class EnemyRig {
       this.mat.emissive.setRGB(Math.max(this.flash, f * (Math.sin(this.t * (10 + f * 30)) > 0 ? 0.8 : 0)), this.flash * 0.3, this.flash * 0.2);
     }
   }
-  dispose() { this.root.removeFromParent(); this.mat.dispose(); }
+  dispose() { disposeTree(this.root); this.root.removeFromParent(); }
 }

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { HeroDef, Accessory } from '../../data/heroes';
 import { themeById, type SkinTheme } from '../../data/skins';
 import { toon, basic, addOutline, sphereGeo, capsuleGeo, rboxGeo, cylGeo, torusGeo, coneGeo, makeEye, blobShadow, shade } from '../toon';
+import { disposeTree } from '../toon';
 import { clamp, damp, lerp } from '../../core/math';
 
 export type HeroAnim = 'idle' | 'run' | 'victory' | 'defeat' | 'spawn' | 'select' | 'ability' | 'hurt';
@@ -288,7 +289,7 @@ export class HeroRig {
   setFlash(v: number) {
     for (const m of this.flashMats) (m.emissive as THREE.Color).setRGB(v, v * 0.95, v * 0.95);
   }
-  dispose() { this.root.removeFromParent(); for (const m of this.flashMats) m.dispose(); }
+  dispose() { disposeTree(this.root); this.root.removeFromParent(); }
 
   update(dt: number) {
     this.time += dt; this.animT += dt;
