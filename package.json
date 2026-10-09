@@ -1,0 +1,35 @@
+{
+  "name": "magnet-war",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MAGNET WAR — a portrait magnetic action game by SUPERESSENCE",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "qa": "node tools/qa.mjs",
+    "assets": "node tools/gen-assets.mjs",
+    "android:sync": "npm run build && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
+    "@fontsource/lilita-one": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@types/three": "^0.186.0",
+    "playwright": "^1.56.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}
