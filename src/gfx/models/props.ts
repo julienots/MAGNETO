@@ -12,7 +12,7 @@ export const PROP_SPECS: Record<PropKind, PropSpec> = {
   debris: { r: 0.42, mass: 0.8, hp: 50, material: 'metal', restitution: 0.55, magnetic: 1.1, drag: 2.2 },
   iceBlock: { r: 0.55, mass: 2, hp: 70, material: 'ice', restitution: 0.3, magnetic: 0.9, drag: 3 },
   magmaRock: { r: 0.5, mass: 1.8, hp: 90, material: 'rock', restitution: 0.3, magnetic: 0.9, drag: 3.5 },
-  asteroid: { r: 0.85, mass: 5, hp: 500, material: 'rock', restitution: 0.4, magnetic: 0.8, drag: 2 },
+  asteroid: { r: 0.85, mass: 3.2, hp: 500, material: 'rock', restitution: 0.4, magnetic: 0.8, drag: 2 },
   core: { r: 0.8, mass: 12, hp: 99999, material: 'metal', restitution: 0.2, magnetic: 0.25, drag: 5 },
 };
 

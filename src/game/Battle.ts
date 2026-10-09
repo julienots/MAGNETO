@@ -212,7 +212,7 @@ export class Battle {
           this.spawnTarget('generator', x, z, 180 * DIFF_HP(this.difficulty));
         }
       }
-      if (o === 'protect') this.protectCore = this.spawnTarget('protect', 0, 3.2, 650 * DIFF_HP(this.difficulty));
+      if (o === 'protect') this.protectCore = this.spawnTarget('protect', 0, 3.2, 900 * DIFF_HP(this.difficulty));
       if (o === 'collect') {
         const mesh = makePropMesh('collector', 0.04); mesh.position.set(0, 0, -8);
         this.scene.add(mesh);
@@ -579,7 +579,7 @@ export class Battle {
       const e = target.owner as Enemy;
       if (e.dead) return;
       // shield: frontal deflect
-      if (e.kind === 'shield' && e.state !== 'spawn') {
+      if (e.kind === 'shield' && e.state !== 'spawn' && proj.mass < 3) {
         const fx = Math.sin(e.facing), fz = Math.cos(e.facing);
         if (-(nx * fx + nz * fz) > 0.6) {
           audio.shield(); this.fx.burst(target.x - nx * target.r, 0.9, target.z - nz * target.r, 0x30e0ff, 10, 6, 0.4, 0.3);
