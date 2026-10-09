@@ -1,0 +1,91 @@
+name: MAGNET WAR — test & Android build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Typecheck, unit tests, web build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: magnet-war-web
+          path: dist
+
+  android:
+    name: Android APK (debug + release) & AAB
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.MW_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.MW_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.MW_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.MW_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            {
+              echo "MW_KEYSTORE_PATH=$RUNNER_TEMP/release.jks"
+              echo "MW_KEYSTORE_PASSWORD=$KS_PASS"
+              echo "MW_KEY_ALIAS=$KEY_ALIAS"
+              echo "MW_KEY_PASSWORD=$KEY_PASS"
+            } >> "$GITHUB_ENV"
+          else
+            echo "::warning::No MW_KEYSTORE_BASE64 secret: signing release builds with a throw-away CI key (fine for testing, NOT for Play Store updates)."
+            keytool -genkeypair -v -keystore "$RUNNER_TEMP/ci.jks" -alias magnetwar -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass cipassword -keypass cipassword -dname "CN=SUPERESSENCE CI, O=SUPERESSENCE, C=FR"
+            {
+              echo "MW_KEYSTORE_PATH=$RUNNER_TEMP/ci.jks"
+              echo "MW_KEYSTORE_PASSWORD=cipassword"
+              echo "MW_KEY_ALIAS=magnetwar"
+              echo "MW_KEY_PASSWORD=cipassword"
+            } >> "$GITHUB_ENV"
+          fi
+      - name: Gradle build
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
+      - name: Collect outputs
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/MagnetWar-debug.apk
+          cp android/app/build/outputs/apk/release/app-release.apk out/MagnetWar-release.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab out/MagnetWar-release.aab
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: magnet-war-android
+          path: out
