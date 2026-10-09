@@ -118,7 +118,12 @@ export class UI {
     this.modal(c);
   }
 
+  private lastFlash = 0;
   flash(color: string, a = 0.4) {
+    const now = performance.now();
+    if (now - this.lastFlash < 160 && a < 0.6) return; // never stack flashes
+    this.lastFlash = now;
+    a = Math.min(a, 0.85);
     const f = h('div.screen-flash', { style: { background: color } });
     this.root.appendChild(f);
     f.animate([{ opacity: a }, { opacity: 0 }], { duration: 350, easing: 'ease-out' }).onfinish = () => f.remove();

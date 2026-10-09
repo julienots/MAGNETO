@@ -461,7 +461,7 @@ export class Battle {
     audio.pickup();
     haptics.light();
     this.fx.burst(b.x, 0.8, b.z, 0xff5a5a, 6, 3, 0.35, 0.3);
-    if (b.kind === 'enemy') { const e = b.owner as Enemy; e.rig.kick(0.8); if (e.kind !== 'swarm') this.ft.spawn(b.x, 2, b.z, 'CAPTURÉ !', 'ft-small', 0.7); }
+    if (b.kind === 'enemy') { const e = b.owner as Enemy; e.rig.kick(0.8); if (e.kind !== 'swarm' && Math.random() < 0.4) this.ft.spawn(b.x, 2, b.z, 'CAPTURÉ !', 'ft-small', 0.7); }
   }
 
   newChain() { this.chainId++; this.chainCounts.set(this.chainId, 0); return this.chainId; }
@@ -705,7 +705,7 @@ export class Battle {
     e.hp -= dmg;
     if (dmg >= 3) {
       e.rig.flash = 1; e.rig.kick(0.7); e.hpBarT = 2;
-      this.ft.spawn(e.body.x, 1.6 * e.scale + 0.4, e.body.z, String(Math.round(dmg)), dmg > 60 ? 'ft-dmg ft-crit' : 'ft-dmg', 0.75, dmg > 60 ? 1.25 : 1);
+      if (dmg >= 12 || e.hp <= 0) this.ft.spawn(e.body.x, 1.6 * e.scale + 0.4, e.body.z, String(Math.round(dmg)), dmg > 60 ? 'ft-dmg ft-crit' : 'ft-dmg', 0.75, dmg > 60 ? 1.25 : 1);
     } else e.rig.flash = Math.max(e.rig.flash, 0.3);
     this.stats.damageTaken += 0;
     if (e.hp <= 0) this.killEnemy(e, source, chain);
@@ -755,7 +755,7 @@ export class Battle {
   private coinPickup(x: number, z: number) {
     this.stats.coins += 1;
     this.fx.burst(x, 1, z, 0xffd23f, 3, 4, 0.35, 0.4);
-    this.ft.spawn(x, 1.2, z, '🪙', 'ft-coin', 0.6, 0.8);
+    if (this.stats.coins % 3 === 0) this.ft.spawn(x, 1.2, z, '🪙', 'ft-coin', 0.6, 0.8);
     audio.coin(this.stats.coins);
   }
   private heartPickup(x: number, z: number) {
@@ -785,7 +785,7 @@ export class Battle {
     this.rig.shake(0.45);
     this.rig.kick(0.6);
     this.hitstop = Math.max(this.hitstop, 0.06);
-    this.onFlash?.('#ffb627', 0.18);
+    this.onFlash?.('#ffb627', 0.12);
     for (const b of this.phys.query(x, z, radius, [])) {
       if (b.isStatic && b.kind !== 'target') continue;
       const dx = b.x - x, dz = b.z - z, d = Math.hypot(dx, dz) || 0.01;
@@ -864,7 +864,7 @@ export class Battle {
           b.vx = rx * sp; b.vz = rz * sp; b.owner = 'player'; b.dmg *= 2; b.color = 0x6fb0ff; b.chain = this.newChain();
           (b.mesh.material as THREE.MeshBasicMaterial).color.setHex(b.color);
           this.fx.burst(b.x, b.y, b.z, 0x6fb0ff, 8, 5, 0.3, 0.25);
-          this.ft.spawn(b.x, 2, b.z, 'RENVOYÉ !', 'ft-small', 0.6);
+          if (Math.random() < 0.35) this.ft.spawn(b.x, 2, b.z, 'RENVOYÉ !', 'ft-small', 0.6);
           audio.shield();
         } else if (d < pb.r + b.r && !p.dead) {
           this.hurtPlayer(b.dmg, b.vx / (Math.hypot(b.vx, b.vz) || 1), b.vz / (Math.hypot(b.vx, b.vz) || 1), 4);

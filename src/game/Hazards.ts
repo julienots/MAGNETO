@@ -37,7 +37,7 @@ export function swallow(b: Battle, body: Body, kind: 'pit' | 'lava' | 'well') {
     e.falling = 0.5; body.ghost = true; body.vx *= 0.2; body.vz *= 0.2;
     if (kind === 'lava') { b.fx.burst(body.x, 0.3, body.z, 0xff7a1f, 18, 7, 0.5, 0.5, { up: 9 }); b.fx.smoke(body.x, 0.3, body.z, 4, 0x553322); }
     else b.fx.ring(body.x, body.z, 0x9b5cff, 1.4, 0.2, 0.4, 0.8);
-    b.ft.spawn(body.x, 1.8, body.z, kind === 'lava' ? 'FONDU !' : 'ÉJECTÉ !', 'ft-big', 0.9);
+    if (Math.random() < 0.5) b.ft.spawn(body.x, 1.8, body.z, kind === 'lava' ? 'FONDU !' : 'ÉJECTÉ !', 'ft-big', 0.9);
     audio.enemyDie();
   } else if (body.kind === 'prop') {
     const p = body.owner as Prop;

@@ -12,11 +12,11 @@ export class CameraRig {
   shakeEnabled = true;
   zoom = 1;        // >1 = closer
   zoomTarget = 1;
-  pitch = 0.98;    // radians from horizontal
+  pitch = 0.92;    // radians from horizontal
   /** extra framing offset (boss fights look further north) */
   northBias = 0;
   private t = 0;
-  visibleWidth = 11.5;
+  visibleWidth = 9.8;
   kickAmt = 0;
 
   constructor(aspect: number) {

@@ -7,7 +7,12 @@ export type GloveShape = 'giant' | 'normal' | 'claws' | 'orbs' | 'none';
 export type Accessory = 'antenna' | 'coils' | 'backpack' | 'crown' | 'halo' | 'horns' | 'fin' | 'ring' | 'scarf' | 'goggles' | 'spikes' | 'tank';
 export type EyeStyle = 'big' | 'narrow' | 'visor' | 'cyclops' | 'glow';
 
+export type HairStyle = 'spiky' | 'flame' | 'buzz' | 'ponytail' | 'mohawk' | 'hood' | 'slick' | 'bob' | 'afro';
 export interface HeroModelSpec {
+  hair: HairStyle;
+  hairColor: number;
+  eyeColor: number;
+  /** skin-tone of the face + hands when bare */
   body: BodyShape;
   head: HeadShape;
   gloves: GloveShape;
@@ -53,7 +58,7 @@ export const HEROES: HeroDef[] = [
     color: 0xff4d4d, accent: 0x2f7bff, skinTone: 0xffd2a8,
     stats: { hp: 120, speed: 6.2, force: 1.0, range: 6.5, cone: 38, hold: 4, mass: 3 },
     ability: { id: 'megaMagnet', name: 'MÉGA AIMANT', desc: "Attire TOUT l'écran puis relâche une onde de choc.", cooldown: 9 },
-    model: { body: 'compact', head: 'round', gloves: 'giant', accessories: ['antenna'], eyes: 'big', scale: 1 },
+    model: { hair: 'spiky', hairColor: 0x3a2318, eyeColor: 0x2f7bff, body: 'compact', head: 'round', gloves: 'giant', accessories: ['antenna', 'scarf'], eyes: 'big', scale: 1 },
     unlock: { type: 'start', amount: 0 },
   },
   {
@@ -62,7 +67,7 @@ export const HEROES: HeroDef[] = [
     color: 0xffd23f, accent: 0x7a3cff, skinTone: 0xf6c08e,
     stats: { hp: 100, speed: 7.2, force: 0.9, range: 6, cone: 34, hold: 3, mass: 2.5 },
     ability: { id: 'chainVolt', name: 'ARC EN CHAÎNE', desc: 'Un éclair qui rebondit sur 6 ennemis.', cooldown: 7 },
-    model: { body: 'slim', head: 'round', gloves: 'normal', accessories: ['coils', 'spikes'], eyes: 'narrow', scale: 0.95 },
+    model: { hair: 'flame', hairColor: 0xffe14d, eyeColor: 0x9b5cff, body: 'slim', head: 'round', gloves: 'normal', accessories: ['coils'], eyes: 'narrow', scale: 0.95 },
     unlock: { type: 'stars', amount: 9 },
   },
   {
@@ -71,7 +76,7 @@ export const HEROES: HeroDef[] = [
     color: 0xff8a1f, accent: 0x2b2b3a, skinTone: 0xc98b5e,
     stats: { hp: 180, speed: 5.0, force: 1.25, range: 5.5, cone: 45, hold: 5, mass: 6 },
     ability: { id: 'pulseNova', name: 'NOVA', desc: 'Explosion magnétique à 360° autour de lui.', cooldown: 8 },
-    model: { body: 'heavy', head: 'square', gloves: 'giant', accessories: ['tank', 'goggles'], eyes: 'big', scale: 1.15 },
+    model: { hair: 'buzz', hairColor: 0x1b1b22, eyeColor: 0xff8a1f, body: 'heavy', head: 'round', gloves: 'giant', accessories: ['tank', 'goggles'], eyes: 'big', scale: 1.12 },
     unlock: { type: 'fragments', amount: 40 },
   },
   {
@@ -80,7 +85,7 @@ export const HEROES: HeroDef[] = [
     color: 0x2ee6a6, accent: 0xff4fd8, skinTone: 0xffe0bd,
     stats: { hp: 95, speed: 7.8, force: 0.95, range: 7, cone: 32, hold: 6, mass: 2.2 },
     ability: { id: 'orbitRing', name: 'ANNEAU ORBITAL', desc: 'Les objets proches orbitent et percutent les ennemis.', cooldown: 10 },
-    model: { body: 'slim', head: 'dome', gloves: 'orbs', accessories: ['ring', 'scarf'], eyes: 'big', scale: 0.95 },
+    model: { hair: 'ponytail', hairColor: 0xff4fd8, eyeColor: 0x16c486, body: 'slim', head: 'round', gloves: 'orbs', accessories: ['ring'], eyes: 'big', scale: 0.95 },
     unlock: { type: 'fragments', amount: 60 },
   },
   {
@@ -89,25 +94,25 @@ export const HEROES: HeroDef[] = [
     color: 0x3d7bff, accent: 0xffd23f, skinTone: 0x8d5a3b,
     stats: { hp: 160, speed: 5.6, force: 1.5, range: 6, cone: 30, hold: 3, mass: 5 },
     ability: { id: 'crashWave', name: 'MUR DE FORCE', desc: 'Une vague de répulsion colossale vers l’avant.', cooldown: 8 },
-    model: { body: 'heavy', head: 'visor', gloves: 'giant', accessories: ['horns', 'backpack'], eyes: 'visor', scale: 1.1 },
+    model: { hair: 'mohawk', hairColor: 0xe0302a, eyeColor: 0x3d7bff, body: 'heavy', head: 'round', gloves: 'giant', accessories: ['horns', 'backpack'], eyes: 'narrow', scale: 1.1 },
     unlock: { type: 'trophies', amount: 600 },
   },
   {
     id: 'phase', name: 'PHASE', title: 'Le Spectre', rarity: 'legendary',
     desc: 'Mystérieux. Traverse la matière et frappe de l’intérieur.',
-    color: 0x9b5cff, accent: 0x3ff0ff, skinTone: 0xd9c8ff,
+    color: 0x9b5cff, accent: 0x26c6da, skinTone: 0xe6d6ff,
     stats: { hp: 105, speed: 7.4, force: 1.05, range: 6.5, cone: 36, hold: 4, mass: 2.4 },
     ability: { id: 'phaseDash', name: 'PHASE DASH', desc: 'Devient intangible et traverse tout en blessant.', cooldown: 6 },
-    model: { body: 'cloak', head: 'hood', gloves: 'claws', accessories: ['fin'], eyes: 'glow', scale: 1 },
+    model: { hair: 'hood', hairColor: 0x3a2a7a, eyeColor: 0x3ff0ff, body: 'cloak', head: 'hood', gloves: 'claws', accessories: [], eyes: 'glow', scale: 1 },
     unlock: { type: 'pass', amount: 30 },
   },
   {
     id: 'zero', name: 'ZERO', title: "L'Annulateur", rarity: 'legendary',
     desc: 'Coupe le magnétisme. Le monde flotte, lui seul décide.',
-    color: 0xe8f1ff, accent: 0x18d4ff, skinTone: 0xbfe6ff,
+    color: 0xe8f1ff, accent: 0x18d4ff, skinTone: 0xf3d9c4,
     stats: { hp: 130, speed: 6.4, force: 1.1, range: 7, cone: 40, hold: 5, mass: 3 },
     ability: { id: 'zeroField', name: 'CHAMP ZÉRO', desc: 'Ennemis figés en apesanteur, objets à vous.', cooldown: 11 },
-    model: { body: 'tall', head: 'visor', gloves: 'normal', accessories: ['halo', 'crown'], eyes: 'cyclops', scale: 1.05 },
+    model: { hair: 'slick', hairColor: 0x8fa8e6, eyeColor: 0x18d4ff, body: 'tall', head: 'round', gloves: 'normal', accessories: ['halo'], eyes: 'big', scale: 1.05 },
     unlock: { type: 'fragments', amount: 120 },
   },
 ];

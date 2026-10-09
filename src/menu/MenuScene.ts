@@ -22,7 +22,7 @@ export class MenuScene implements View {
   private lamp!: THREE.Group;
   private tesla!: THREE.Vector3;
   private platform!: THREE.Group;
-  private camMode: 'home' | 'hero' | 'title' = 'title';
+  private camMode: 'home' | 'hero' | 'title' | 'closeup' = 'title';
   private camPos = new THREE.Vector3(0, 3, 12);
   private camLook = new THREE.Vector3(0, 1.4, 0);
   private heroKey = '';
@@ -140,7 +140,7 @@ export class MenuScene implements View {
 
   tapHero() { this.hero?.play('select'); this.fx.burst(0, 2, 0, 0xffd23f, 12, 5, 0.4, 0.5); }
   victory() { this.hero?.play('victory'); }
-  setCam(mode: 'home' | 'hero' | 'title') { this.camMode = mode; if (mode !== 'hero') this.spin = 0; }
+  setCam(mode: 'home' | 'hero' | 'title' | 'closeup') { this.camMode = mode; if (mode !== 'hero') this.spin = 0; }
 
   resize(w: number, h: number) { this.aspect = w / h; this.camera.aspect = this.aspect; this.camera.updateProjectionMatrix(); this.fx.setViewport(h); }
 
@@ -153,6 +153,7 @@ export class MenuScene implements View {
       title: { p: new THREE.Vector3(Math.sin(t * 0.15) * 1.5, 3.4, 13 * narrow), l: new THREE.Vector3(0, 3.2, -2) },
       home: { p: new THREE.Vector3(Math.sin(t * 0.2) * 0.4, 3.0, 14 * narrow), l: new THREE.Vector3(0, 2.0, 0) },
       hero: { p: new THREE.Vector3(0, 3.2, 22 * narrow), l: new THREE.Vector3(0, -1.4, 0) },
+      closeup: { p: new THREE.Vector3(0, 1.8, 9.5), l: new THREE.Vector3(0, 1.55, 0) },
     }[this.camMode];
     const k = 1 - Math.exp(-3 * dt);
     this.camPos.lerp(targets.p, k); this.camLook.lerp(targets.l, k);
@@ -176,7 +177,7 @@ export class MenuScene implements View {
     if (Math.random() < dt * 4) this.fx.glow.spawn((Math.random() - 0.5) * 14, 0.2, -2 - Math.random() * 6, (Math.random() - 0.5) * 0.4, 0.4 + Math.random() * 0.5, 0, new THREE.Color(0xffd23f), 0.7, 0.12, 3, -0.05, 0.2);
     // hero
     if (this.hero) {
-      this.hero.field = 0.25 + Math.sin(t * 1.5) * 0.15;
+      this.hero.field = this.camMode === 'home' || this.camMode === 'title' ? Math.max(0, Math.sin(t * 0.6)) * 0.35 : 0;
       this.hero.polarity = Math.sin(t * 0.5) > 0 ? 1 : -1;
       this.hero.root.rotation.y = damp(this.hero.root.rotation.y, this.spin + (this.camMode === 'home' ? Math.sin(t * 0.4) * 0.15 : 0), 6, dt);
       this.hero.update(dt);

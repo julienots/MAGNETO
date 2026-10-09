@@ -61,7 +61,7 @@ export class BattleScreen implements Screen {
     this.cleanup();
     const app = this.app;
     clear(this.overlay);
-    this.bannerQ = []; this.bannerBusy = false;
+    this.bannerQ = []; this.bannerBusy = false; this.bannerGen++; this.bannerEl = null;
     this.paused = false;
     this.input = new Input(this.zone, this.el);
     const b = new Battle(cfg, app.game.w / app.game.h, app.floatLayer);
@@ -176,6 +176,8 @@ export class BattleScreen implements Screen {
 
   private bannerQ: { title: string; sub?: string; color: string; dur: number }[] = [];
   private bannerBusy = false;
+  private bannerGen = 0;
+  private bannerEl: HTMLElement | null = null;
   /** Banners are queued so they never overlap. */
   banner(title: string, sub?: string, color = '#fff', dur = 1.4) {
     if (this.bannerQ.length >= 3) this.bannerQ.shift();
@@ -186,10 +188,17 @@ export class BattleScreen implements Screen {
     const b = this.bannerQ.shift();
     if (!b) { this.bannerBusy = false; return; }
     this.bannerBusy = true;
+    const gen = this.bannerGen;
+    this.bannerEl?.remove();
     const el = h('div.banner', h('div.bt.stroke', { style: { color: b.color } }, b.title), b.sub ? h('div.bs.stroke', b.sub) : null);
+    this.bannerEl = el;
     this.overlay.appendChild(el);
     const dur = this.bannerQ.length ? Math.min(b.dur, 0.9) : b.dur;
-    setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); this.nextBanner(); }, 280); }, dur * 1000);
+    setTimeout(() => {
+      if (gen !== this.bannerGen) return;
+      el.classList.add('out');
+      setTimeout(() => { el.remove(); if (gen === this.bannerGen) this.nextBanner(); }, 280);
+    }, dur * 1000);
   }
   private tier(t: ComboTier, i: number) {
     if (i < 2) return;

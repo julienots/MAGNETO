@@ -20,13 +20,43 @@ export function disposeTree(root: THREE.Object3D) {
   });
 }
 
+/* ---------- premium cel shading (patched once into every toon material) ----------
+ * - soft 2-band ramp + highlight band
+ * - shadows tinted cool lavender instead of plain grey (reads as "painted")
+ * - fresnel rim light that separates characters from the background */
+(() => {
+  const chunk = THREE.ShaderChunk as any;
+  chunk.gradientmap_pars_fragment = chunk.gradientmap_pars_fragment.replace(
+    'return vec3( texture2D( gradientMap, coord ).r );',
+    'float g = texture2D( gradientMap, coord ).r; return mix( vec3( 0.56, 0.6, 0.84 ), vec3( 1.0 ), g );',
+  );
+  const lib = THREE.ShaderLib.toon as any;
+  if (!lib.fragmentShader.includes('CEL_RIM')) {
+    lib.fragmentShader = lib.fragmentShader.replace('#include <opaque_fragment>', `
+      // CEL_RIM
+      {
+        float ndv = max( dot( normalize( normal ), normalize( vViewPosition ) ), 0.0 );
+        float rim = smoothstep( 0.68, 0.96, 1.0 - ndv );
+        outgoingLight += vec3( 1.0, 0.97, 0.92 ) * rim * 0.32 * ( 0.35 + 0.65 * diffuseColor.rgb );
+      }
+      #include <opaque_fragment>`);
+  }
+})();
+
 /* ---------- toon ramp ---------- */
 let ramp: THREE.DataTexture | null = null;
 export function toonRamp() {
   if (ramp) return ramp;
-  const data = new Uint8Array([90, 90, 90, 255, 175, 175, 175, 255, 235, 235, 235, 255, 255, 255, 255, 255]);
-  ramp = new THREE.DataTexture(data, 4, 1, THREE.RGBAFormat);
-  ramp.minFilter = ramp.magFilter = THREE.NearestFilter;
+  const N = 128;
+  const data = new Uint8Array(N * 4);
+  const ss = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let i = 0; i < N; i++) {
+    const x = i / (N - 1);
+    const g = ss(0.4, 0.47, x) * 0.82 + ss(0.8, 0.86, x) * 0.18;
+    data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = Math.round(g * 255); data[i * 4 + 3] = 255;
+  }
+  ramp = new THREE.DataTexture(data, N, 1, THREE.RGBAFormat);
+  ramp.minFilter = ramp.magFilter = THREE.LinearFilter;
   ramp.generateMipmaps = false;
   ramp.needsUpdate = true;
   ramp.userData.shared = true;
