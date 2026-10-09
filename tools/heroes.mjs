@@ -14,7 +14,7 @@ for (const id of ids) {
       if (!h.__patched) { const up = h.update.bind(h); h.update = (dt) => { if (window.__forceRun) h.moveSpeed = 1; up(dt); }; h.__patched = true; }
       window.__forceRun = anim === 'run';
     }, [id, rot, anim, skin]);
-    await sleep(anim === 'victory' ? 450 : 1700);
+    await sleep(anim === 'victory' ? 450 : (name === 'a' ? 3200 : 1700));
     await page.screenshot({ path: `qa-out/h-${id}-${name}.png`, clip: { x: 45, y: 150, width: 300, height: 450 } });
   }
 }
