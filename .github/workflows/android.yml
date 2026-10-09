@@ -32,6 +32,8 @@ jobs:
     name: Android APK (debug + release) & AAB
     needs: web
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -94,3 +96,20 @@ jobs:
         with:
           name: magnet-war-android
           path: out
+      - name: Publish downloadable build (GitHub Release)
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: MAGNET WAR — build ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          body: |
+            Build automatique de MAGNET WAR (SUPERESSENCE).
+            - **MagnetWar-release.apk** : à installer sur Android (autoriser les sources inconnues).
+            - MagnetWar-debug.apk : version de test.
+            - MagnetWar-release.aab : pour le Play Store.
+          files: |
+            out/MagnetWar-release.apk
+            out/MagnetWar-debug.apk
+            out/MagnetWar-release.aab
