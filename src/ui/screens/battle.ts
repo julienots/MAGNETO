@@ -61,6 +61,7 @@ export class BattleScreen implements Screen {
     this.cleanup();
     const app = this.app;
     clear(this.overlay);
+    this.bannerQ = []; this.bannerBusy = false;
     this.paused = false;
     this.input = new Input(this.zone, this.el);
     const b = new Battle(cfg, app.game.w / app.game.h, app.floatLayer);
@@ -92,7 +93,7 @@ export class BattleScreen implements Screen {
       clear(cd); cd.appendChild(h('span', { style: { color: i === 3 ? '#ffd23f' : '#fff' } }, s));
       audio.countdown(i === 3); haptics.light();
       if (i === 3) { setTimeout(() => cd.remove(), 600); b.begin(); }
-    }, 1300 + i * 520));
+    }, 1500 + i * 520));
     document.addEventListener('visibilitychange', this.visHandler);
     this.hudT = 0; this.last = {};
   }
@@ -173,10 +174,22 @@ export class BattleScreen implements Screen {
     this.fpsEl.textContent = showFps ? `${this.app.game.fps} FPS · ${this.app.game.renderer.info.render.calls} DC` : '';
   }
 
+  private bannerQ: { title: string; sub?: string; color: string; dur: number }[] = [];
+  private bannerBusy = false;
+  /** Banners are queued so they never overlap. */
   banner(title: string, sub?: string, color = '#fff', dur = 1.4) {
-    const el = h('div.banner', h('div.bt.stroke', { style: { color } }, title), sub ? h('div.bs.stroke', sub) : null);
+    if (this.bannerQ.length >= 3) this.bannerQ.shift();
+    this.bannerQ.push({ title, sub, color, dur });
+    if (!this.bannerBusy) this.nextBanner();
+  }
+  private nextBanner() {
+    const b = this.bannerQ.shift();
+    if (!b) { this.bannerBusy = false; return; }
+    this.bannerBusy = true;
+    const el = h('div.banner', h('div.bt.stroke', { style: { color: b.color } }, b.title), b.sub ? h('div.bs.stroke', b.sub) : null);
     this.overlay.appendChild(el);
-    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, dur * 1000);
+    const dur = this.bannerQ.length ? Math.min(b.dur, 0.9) : b.dur;
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); this.nextBanner(); }, 280); }, dur * 1000);
   }
   private tier(t: ComboTier, i: number) {
     if (i < 2) return;

@@ -461,7 +461,7 @@ export class Battle {
     audio.pickup();
     haptics.light();
     this.fx.burst(b.x, 0.8, b.z, 0xff5a5a, 6, 3, 0.35, 0.3);
-    if (b.kind === 'enemy') { const e = b.owner as Enemy; e.rig.kick(0.8); this.ft.spawn(b.x, 2, b.z, 'CAPTURÉ !', 'ft-small', 0.7); }
+    if (b.kind === 'enemy') { const e = b.owner as Enemy; e.rig.kick(0.8); if (e.kind !== 'swarm') this.ft.spawn(b.x, 2, b.z, 'CAPTURÉ !', 'ft-small', 0.7); }
   }
 
   newChain() { this.chainId++; this.chainCounts.set(this.chainId, 0); return this.chainId; }
@@ -703,8 +703,10 @@ export class Battle {
     if (e.dead || e.state === 'spawn') return;
     if (e.phase && source !== 'ability') return;
     e.hp -= dmg;
-    e.rig.flash = 1; e.rig.kick(0.7); e.hpBarT = 2;
-    this.ft.spawn(e.body.x, 1.6 * e.scale + 0.4, e.body.z, String(Math.round(dmg)), dmg > 60 ? 'ft-dmg ft-crit' : 'ft-dmg', 0.75, dmg > 60 ? 1.25 : 1);
+    if (dmg >= 3) {
+      e.rig.flash = 1; e.rig.kick(0.7); e.hpBarT = 2;
+      this.ft.spawn(e.body.x, 1.6 * e.scale + 0.4, e.body.z, String(Math.round(dmg)), dmg > 60 ? 'ft-dmg ft-crit' : 'ft-dmg', 0.75, dmg > 60 ? 1.25 : 1);
+    } else e.rig.flash = Math.max(e.rig.flash, 0.3);
     this.stats.damageTaken += 0;
     if (e.hp <= 0) this.killEnemy(e, source, chain);
   }
@@ -1099,7 +1101,7 @@ export class Battle {
       const moving = clamp(b.speed / Math.max(0.1, e.def.speed), 0, 1);
       e.rig.update(dt, moving, { phase: e.phase, charge: e.charge, fuse: e.fuse, field: e.field });
       if (b.frozen > 0) { b.frozen -= dt; e.rig.mat.emissive.setRGB(0.2, 0.45, 0.6); }
-      if (e.burn > 0) { e.burn -= dt; this.damageEnemy(e, 14 * dt, 0, 'hazard'); if (this.rng.chance(0.4)) this.fx.trail(b.x, 1, b.z, 0xff7a1f, 0.4, 0.4); if (e.hp <= 0) continue; }
+      if (e.burn > 0) { e.burn -= dt; this.damageEnemy(e, 14 * dt, 0, 'hazard'); if (Math.floor(e.burn * 2) !== Math.floor((e.burn + dt) * 2)) this.ft.spawn(b.x, 1.8, b.z, '🔥7', 'ft-crit', 0.5, 0.8); if (this.rng.chance(0.4)) this.fx.trail(b.x, 1, b.z, 0xff7a1f, 0.4, 0.4); if (e.hp <= 0) continue; }
       if (b.held) { e.rig.root.rotation.z = Math.sin(this.t * 30) * 0.15; }
       else e.rig.root.rotation.z = 0;
     }
